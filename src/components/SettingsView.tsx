@@ -6,7 +6,6 @@ import {
   SliderField,
   Dropdown,
   ButtonItem,
-  TextField,
   ScrollPanelGroup,
 } from "@decky/ui";
 import { Settings, EmulatorStatus } from "../types";
@@ -24,7 +23,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   emulators,
   onSaveSettings,
   onDetectEmulators,
-  isLoading
 }) => {
   const [localSettings, setLocalSettings] = useState<Settings | null>(settings);
   const [hasChanges, setHasChanges] = useState(false);

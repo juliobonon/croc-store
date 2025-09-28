@@ -4,7 +4,6 @@ import {
   PanelSectionRow,
   Focusable,
   ScrollPanelGroup,
-  ProgressBarWithInfo,
   ButtonItem,
 } from "@decky/ui";
 import { DownloadProgress } from "../types";
@@ -41,10 +40,9 @@ export const DownloadsView: React.FC<DownloadsViewProps> = ({
   };
 
   const DownloadItem: React.FC<{
-    romId: string;
     progress: DownloadProgress;
     showLaunchButton?: boolean;
-  }> = ({ romId, progress, showLaunchButton = false }) => {
+  }> = ({ progress, showLaunchButton = false }) => {
     const isActive = progress.status === 'downloading' || progress.status === 'starting';
     const isCompleted = progress.status === 'completed';
     const hasError = progress.status === 'error';
@@ -183,7 +181,6 @@ export const DownloadsView: React.FC<DownloadsViewProps> = ({
             {activeDownloads.map(([romId, progress]) => (
               <DownloadItem
                 key={romId}
-                romId={romId}
                 progress={progress}
               />
             ))}
@@ -198,7 +195,6 @@ export const DownloadsView: React.FC<DownloadsViewProps> = ({
             {completedDownloads.map(([romId, progress]) => (
               <DownloadItem
                 key={romId}
-                romId={romId}
                 progress={progress}
                 showLaunchButton={true}
               />
@@ -214,7 +210,6 @@ export const DownloadsView: React.FC<DownloadsViewProps> = ({
             {failedDownloads.map(([romId, progress]) => (
               <DownloadItem
                 key={romId}
-                romId={romId}
                 progress={progress}
               />
             ))}
