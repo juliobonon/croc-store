@@ -8,7 +8,7 @@ import {
   ButtonItem,
   TextField,
   ScrollPanelGroup,
-} from "decky-frontend-lib";
+} from "@decky/ui";
 import { Settings, EmulatorStatus } from "../types";
 
 interface SettingsViewProps {

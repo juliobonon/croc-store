@@ -2,23 +2,21 @@ import asyncio
 import aiohttp
 import os
 import json
-import logging
 from typing import Dict, List, Any, Optional
 import zipfile
 import subprocess
 from pathlib import Path
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# The decky plugin module is located at decky-loader/plugin
+import decky
 
-class CrocStorePlugin:
+class Plugin:
     def __init__(self):
         self.session = None
         self.base_url = "https://api.crocdb.net"  # Placeholder - need actual CrocDB API endpoint
-        self.roms_path = Path("/home/deck/ROMs")
-        self.downloads_path = Path("/home/deck/Downloads/CrocStore")
-        self.settings_path = Path("/home/deck/.config/croc-store")
+        self.roms_path = Path(decky.DECKY_USER_HOME) / "ROMs"
+        self.downloads_path = Path(decky.DECKY_USER_HOME) / "Downloads" / "CrocStore"
+        self.settings_path = Path(decky.DECKY_SETTINGS_DIR)
         
         # Ensure directories exist
         self.roms_path.mkdir(parents=True, exist_ok=True)
@@ -44,6 +42,31 @@ class CrocStorePlugin:
         """Clean up resources"""
         if self.session:
             await self.session.close()
+
+    # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
+    async def _main(self):
+        decky.decky.logger.info("Croc Store plugin initializing...")
+
+    # Function called first during the unload process
+    async def _unload(self):
+        decky.decky.logger.info("Croc Store plugin unloading...")
+        await self.close()
+
+    # Function called after `_unload` during uninstall
+    async def _uninstall(self):
+        decky.decky.logger.info("Croc Store plugin uninstalling...")
+        pass
+
+    # Migrations that should be performed before entering `_main()`.
+    async def _migration(self):
+        decky.decky.logger.info("Croc Store plugin migrating...")
+        # Migrate old settings and data if needed
+        decky.migrate_settings(
+            os.path.join("/home/deck/.config", "croc-store"),
+        )
+        decky.migrate_runtime(
+            os.path.join("/home/deck/Downloads", "CrocStore"),
+        )
     
     # Settings Management
     async def get_settings(self) -> Dict[str, Any]:
@@ -68,7 +91,7 @@ class CrocStorePlugin:
                 await self.save_settings(default_settings)
                 return default_settings
         except Exception as e:
-            logger.error(f"Error loading settings: {e}")
+            decky.logger.error(f"Error loading settings: {e}")
             return default_settings
     
     async def save_settings(self, settings: Dict[str, Any]) -> bool:
@@ -79,7 +102,7 @@ class CrocStorePlugin:
                 json.dump(settings, f, indent=2)
             return True
         except Exception as e:
-            logger.error(f"Error saving settings: {e}")
+            decky.logger.error(f"Error saving settings: {e}")
             return False
     
     # ROM Search and Browse
@@ -117,7 +140,7 @@ class CrocStorePlugin:
             return mock_roms
             
         except Exception as e:
-            logger.error(f"Error searching ROMs: {e}")
+            decky.logger.error(f"Error searching ROMs: {e}")
             return []
     
     async def get_platforms(self) -> List[Dict[str, Any]]:
@@ -189,7 +212,7 @@ class CrocStorePlugin:
             return True
             
         except Exception as e:
-            logger.error(f"Error downloading ROM {rom_id}: {e}")
+            decky.logger.error(f"Error downloading ROM {rom_id}: {e}")
             if rom_id in self.download_progress:
                 self.download_progress[rom_id]["status"] = "error"
                 self.download_progress[rom_id]["error"] = str(e)
@@ -225,7 +248,7 @@ class CrocStorePlugin:
             
             # Check if ROM file exists
             if not os.path.exists(rom_path):
-                logger.error(f"ROM file not found: {rom_path}")
+                decky.logger.error(f"ROM file not found: {rom_path}")
                 return False
             
             # Try to launch with preferred emulator
@@ -256,7 +279,7 @@ class CrocStorePlugin:
             return True
             
         except Exception as e:
-            logger.error(f"Error launching ROM {rom_path}: {e}")
+            decky.logger.error(f"Error launching ROM {rom_path}: {e}")
             return False
     
     # Local ROM Management
@@ -281,59 +304,6 @@ class CrocStorePlugin:
                             roms.append(rom_info)
             
         except Exception as e:
-            logger.error(f"Error getting local ROMs: {e}")
+            decky.logger.error(f"Error getting local ROMs: {e}")
         
         return roms
-
-# Plugin instance
-plugin_instance = CrocStorePlugin()
-
-# API Functions for frontend
-async def search_roms(query: str = "", platform: str = "", limit: int = 50):
-    """Search ROMs API endpoint"""
-    return await plugin_instance.search_roms(query, platform, limit)
-
-async def get_platforms():
-    """Get platforms API endpoint"""
-    return await plugin_instance.get_platforms()
-
-async def download_rom(rom_id: str, rom_info: dict):
-    """Download ROM API endpoint"""
-    return await plugin_instance.download_rom(rom_id, rom_info)
-
-async def get_download_progress(rom_id: str):
-    """Get download progress API endpoint"""
-    return await plugin_instance.get_download_progress(rom_id)
-
-async def get_all_downloads():
-    """Get all downloads API endpoint"""
-    return await plugin_instance.get_all_downloads()
-
-async def launch_rom(rom_path: str, platform: str = ""):
-    """Launch ROM API endpoint"""
-    return await plugin_instance.launch_rom(rom_path, platform)
-
-async def get_local_roms():
-    """Get local ROMs API endpoint"""
-    return await plugin_instance.get_local_roms()
-
-async def get_settings():
-    """Get settings API endpoint"""
-    return await plugin_instance.get_settings()
-
-async def save_settings(settings: dict):
-    """Save settings API endpoint"""
-    return await plugin_instance.save_settings(settings)
-
-async def detect_emulators():
-    """Detect emulators API endpoint"""
-    return await plugin_instance.detect_emulators()
-
-# Plugin lifecycle
-async def _main():
-    """Plugin main function"""
-    pass
-
-async def _unload():
-    """Plugin cleanup function"""
-    await plugin_instance.close()

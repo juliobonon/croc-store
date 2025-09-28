@@ -6,7 +6,7 @@ import {
   ScrollPanelGroup,
   ProgressBarWithInfo,
   ButtonItem,
-} from "decky-frontend-lib";
+} from "@decky/ui";
 import { DownloadProgress } from "../types";
 
 interface DownloadsViewProps {
