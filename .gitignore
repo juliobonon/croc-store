@@ -42,3 +42,7 @@ venv.bak/
 # Logs
 logs/
 *.log
+
+# Backup files
+*.bak
+*~

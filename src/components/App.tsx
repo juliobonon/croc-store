@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import {
-  ButtonItem,
-  PanelSection,
-  PanelSectionRow,
   Tabs,
-  gamepadDialogClasses,
   showModal,
   ConfirmModal,
 } from "@decky/ui";
@@ -29,7 +25,6 @@ export const App: React.FC = () => {
     
     // Loading states
     isSearching,
-    isLoadingPlatforms,
     isLoadingLocalROMs,
     isLoadingSettings,
     
