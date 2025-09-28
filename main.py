@@ -45,21 +45,21 @@ class Plugin:
 
     # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
     async def _main(self):
-        decky.decky.logger.info("Croc Store plugin initializing...")
+        decky.logger.info("Croc Store plugin initializing...")
 
     # Function called first during the unload process
     async def _unload(self):
-        decky.decky.logger.info("Croc Store plugin unloading...")
+        decky.logger.info("Croc Store plugin unloading...")
         await self.close()
 
     # Function called after `_unload` during uninstall
     async def _uninstall(self):
-        decky.decky.logger.info("Croc Store plugin uninstalling...")
+        decky.logger.info("Croc Store plugin uninstalling...")
         pass
 
     # Migrations that should be performed before entering `_main()`.
     async def _migration(self):
-        decky.decky.logger.info("Croc Store plugin migrating...")
+        decky.logger.info("Croc Store plugin migrating...")
         # Migrate old settings and data if needed
         decky.migrate_settings(
             os.path.join("/home/deck/.config", "croc-store"),
@@ -111,48 +111,143 @@ class Plugin:
         try:
             session = await self._get_session()
             
-            # Build search parameters
-            params = {
-                "q": query,
-                "limit": limit
+            # Build request payload for CrocDB API
+            payload = {
+                "max_results": min(limit, 100),  # API max is 100
+                "page": 1
             }
+            
+            if query:
+                payload["search_key"] = query
+            
             if platform:
-                params["platform"] = platform
+                payload["platforms"] = [platform.lower()]
             
-            # For now, return mock data until we have the actual CrocDB API
-            # TODO: Replace with actual API call
-            mock_roms = [
-                {
-                    "id": f"rom_{i}",
-                    "name": f"Super Mario Bros {i}",
-                    "platform": "NES",
-                    "region": "USA",
-                    "language": "English",
-                    "size": "32KB",
-                    "description": f"Classic platformer game {i}",
-                    "download_url": f"https://example.com/roms/smb{i}.zip",
-                    "image_url": f"https://example.com/images/smb{i}.png"
-                }
-                for i in range(1, min(limit + 1, 6))
-                if query.lower() in f"super mario bros {i}".lower()
-            ]
+            decky.logger.info(f"Searching CrocDB with payload: {payload}")
             
-            return mock_roms
+            # Make API request to CrocDB
+            async with session.post(f"{self.base_url}/search", json=payload, timeout=10) as response:
+                if response.status != 200:
+                    decky.logger.error(f"CrocDB API returned status {response.status}")
+                    return []
+                
+                data = await response.json()
+                
+                # Check if API returned an error
+                if "error" in data.get("info", {}):
+                    decky.logger.error(f"CrocDB API error: {data['info']['error']}")
+                    return []
+                
+                # Transform CrocDB format to our ROM format
+                roms = []
+                results = data.get("data", {}).get("results", [])
+                
+                for entry in results:
+                    # Get the first download link if available
+                    download_url = ""
+                    size_str = "Unknown"
+                    
+                    if entry.get("links") and len(entry["links"]) > 0:
+                        first_link = entry["links"][0]
+                        download_url = first_link.get("url", "")
+                        size_str = first_link.get("size_str", "Unknown")
+                    
+                    # Map regions array to a single region string
+                    region = "Unknown"
+                    if entry.get("regions") and len(entry["regions"]) > 0:
+                        region_map = {
+                            "us": "USA",
+                            "eu": "Europe", 
+                            "jp": "Japan",
+                            "other": "Other"
+                        }
+                        region = region_map.get(entry["regions"][0], entry["regions"][0].upper())
+                    
+                    rom_data = {
+                        "id": entry.get("slug", ""),
+                        "name": entry.get("title", "Unknown"),
+                        "platform": entry.get("platform", "").upper(),
+                        "region": region,
+                        "language": "English",  # CrocDB doesn't specify language, defaulting to English
+                        "size": size_str,
+                        "description": f"{entry.get('title', 'Unknown')} for {entry.get('platform', '').upper()}",
+                        "download_url": download_url,
+                        "image_url": entry.get("boxart_url", "")
+                    }
+                    roms.append(rom_data)
+                
+                decky.logger.info(f"Found {len(roms)} ROMs for query '{query}' on platform '{platform}'")
+                return roms
             
+        except asyncio.TimeoutError:
+            decky.logger.error("CrocDB API request timed out")
+            return []
         except Exception as e:
             decky.logger.error(f"Error searching ROMs: {e}")
             return []
     
     async def get_platforms(self) -> List[Dict[str, Any]]:
-        """Get available platforms"""
-        # Mock data for now
+        """Get available platforms from CrocDB API"""
+        try:
+            session = await self._get_session()
+            
+            decky.logger.info("Fetching platforms from CrocDB API")
+            
+            # Make API request to CrocDB platforms endpoint
+            async with session.get(f"{self.base_url}/platforms", timeout=10) as response:
+                if response.status != 200:
+                    decky.logger.error(f"CrocDB platforms API returned status {response.status}")
+                    return self._get_fallback_platforms()
+                
+                data = await response.json()
+                
+                # Check if API returned an error
+                if "error" in data.get("info", {}):
+                    decky.logger.error(f"CrocDB platforms API error: {data['info']['error']}")
+                    return self._get_fallback_platforms()
+                
+                # Transform CrocDB platforms format to our format
+                platforms = []
+                platforms_data = data.get("data", {}).get("platforms", {})
+                
+                for platform_id, platform_info in platforms_data.items():
+                    # Create short name from the full name
+                    full_name = platform_info.get("name", platform_id.upper())
+                    short_name = platform_id.upper()
+                    
+                    platform_data = {
+                        "id": platform_id,
+                        "name": full_name,
+                        "short_name": short_name
+                    }
+                    platforms.append(platform_data)
+                
+                # Sort platforms by name for better UX
+                platforms.sort(key=lambda x: x["name"])
+                
+                decky.logger.info(f"Loaded {len(platforms)} platforms from CrocDB API")
+                return platforms
+            
+        except asyncio.TimeoutError:
+            decky.logger.error("CrocDB platforms API request timed out, using fallback")
+            return self._get_fallback_platforms()
+        except Exception as e:
+            decky.logger.error(f"Error fetching platforms: {e}, using fallback")
+            return self._get_fallback_platforms()
+    
+    def _get_fallback_platforms(self) -> List[Dict[str, Any]]:
+        """Fallback platforms list if API is unavailable"""
         return [
             {"id": "nes", "name": "Nintendo Entertainment System", "short_name": "NES"},
             {"id": "snes", "name": "Super Nintendo Entertainment System", "short_name": "SNES"},
             {"id": "gba", "name": "Game Boy Advance", "short_name": "GBA"},
             {"id": "n64", "name": "Nintendo 64", "short_name": "N64"},
             {"id": "psx", "name": "PlayStation", "short_name": "PSX"},
-            {"id": "genesis", "name": "Sega Genesis", "short_name": "Genesis"}
+            {"id": "ps1", "name": "PlayStation", "short_name": "PS1"},
+            {"id": "genesis", "name": "Sega Genesis", "short_name": "Genesis"},
+            {"id": "sms", "name": "Sega Master System", "short_name": "SMS"},
+            {"id": "gb", "name": "Game Boy", "short_name": "GB"},
+            {"id": "gbc", "name": "Game Boy Color", "short_name": "GBC"}
         ]
     
     # Download Management
