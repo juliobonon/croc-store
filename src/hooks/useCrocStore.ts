@@ -163,6 +163,23 @@ export const useCrocStore = () => {
     apiGetAllDownloads().then(setDownloads).catch(console.error);
   }, [loadPlatforms, loadSettings, detectEmulators]);
 
+  // Refresh downloads periodically when there are active downloads
+  useEffect(() => {
+    const hasActiveDownloads = Object.values(downloads).some(
+      progress => progress.status === 'downloading' || progress.status === 'starting'
+    );
+    
+    if (hasActiveDownloads) {
+      const interval = setInterval(() => {
+        apiGetAllDownloads().then(setDownloads).catch(console.error);
+      }, 2000); // Refresh every 2 seconds
+      
+      return () => clearInterval(interval);
+    }
+    
+    return undefined; // Explicit return for when there are no active downloads
+  }, [downloads]);
+
   return {
     // Data
     searchResults,

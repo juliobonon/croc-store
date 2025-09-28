@@ -1,11 +1,7 @@
 import React from "react";
 import {
   Focusable,
-  PanelSection,
-  PanelSectionRow,
   ButtonItem,
-  gamepadDialogClasses,
-  joinClassNames,
 } from "@decky/ui";
 import { ROM, DownloadProgress } from "../types";
 

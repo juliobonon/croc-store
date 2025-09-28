@@ -8,7 +8,6 @@ import {
   Spinner,
   Focusable,
   ScrollPanelGroup,
-  gamepadDialogClasses,
 } from "@decky/ui";
 import { ROM, Platform, DownloadProgress } from "../types";
 import { ROMCard } from "./ROMCard";
@@ -75,7 +74,6 @@ export const SearchView: React.FC<SearchViewProps> = ({
             label="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Enter ROM name..."
           />
         </PanelSectionRow>
         

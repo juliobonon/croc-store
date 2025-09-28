@@ -4,7 +4,6 @@ import {
   PanelSectionRow,
   Focusable,
   ScrollPanelGroup,
-  ProgressBarWithInfo,
   ButtonItem,
 } from "@decky/ui";
 import { DownloadProgress } from "../types";
@@ -44,7 +43,7 @@ export const DownloadsView: React.FC<DownloadsViewProps> = ({
     romId: string;
     progress: DownloadProgress;
     showLaunchButton?: boolean;
-  }> = ({ romId, progress, showLaunchButton = false }) => {
+  }> = ({ romId: _romId, progress, showLaunchButton = false }) => {
     const isActive = progress.status === 'downloading' || progress.status === 'starting';
     const isCompleted = progress.status === 'completed';
     const hasError = progress.status === 'error';
