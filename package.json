@@ -1,0 +1,46 @@
+{
+  "name": "croc-store",
+  "version": "1.0.0",
+  "description": "A ROM store for Steam Deck using CrocDB API",
+  "scripts": {
+    "build": "shx rm -rf dist && rollup -c",
+    "watch": "rollup -c -w",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "decky",
+    "plugin",
+    "steam-deck",
+    "rom",
+    "emulation"
+  ],
+  "author": "juliobonon",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.1.0",
+    "@rollup/plugin-json": "^4.1.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-replace": "^4.0.0",
+    "@rollup/plugin-typescript": "^8.3.3",
+    "@types/react": "16.14.0",
+    "@types/react-dom": "16.9.14",
+    "rollup": "^2.75.6",
+    "rollup-plugin-import-assets": "^1.1.1",
+    "shx": "^0.3.4",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "decky-frontend-lib": "^3.25.0",
+    "react": "16.14.0",
+    "react-dom": "16.14.0"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "react",
+        "react-dom"
+      ]
+    }
+  }
+}
