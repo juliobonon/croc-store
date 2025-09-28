@@ -1,0 +1,11 @@
+# Python dependencies for Croc Store plugin
+# These are typically provided by the Decky Loader environment on Steam Deck
+
+aiohttp>=3.8.0
+asyncio
+logging
+pathlib
+subprocess
+zipfile
+json
+os

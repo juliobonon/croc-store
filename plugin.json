@@ -1,0 +1,11 @@
+{
+  "name": "Croc Store",
+  "author": "juliobonon",
+  "flags": ["_socket", "_api"],
+  "publish": {
+    "tags": ["ROM", "games", "emulation", "store"],
+    "description": "A ROM store for Steam Deck using CrocDB API with download management and emulator integration",
+    "image": "https://raw.githubusercontent.com/juliobonon/croc-store/main/assets/croc-store-logo.png"
+  },
+  "api_version": 1
+}

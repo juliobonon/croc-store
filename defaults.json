@@ -1,0 +1,29 @@
+{
+  "name": "Croc Store",
+  "tabs": [
+    {
+      "title": "Store",
+      "id": "store"
+    },
+    {
+      "title": "Downloads",
+      "id": "downloads"
+    },
+    {
+      "title": "My ROMs",
+      "id": "local" 
+    },
+    {
+      "title": "Settings",
+      "id": "settings"
+    }
+  ],
+  "settings": {
+    "auto_organize": true,
+    "auto_launch": true,
+    "preferred_emulator": "retroarch",
+    "download_concurrent_limit": 3,
+    "regions": ["USA", "Europe", "Japan"],
+    "languages": ["English"]
+  }
+}
