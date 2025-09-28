@@ -3,10 +3,7 @@ import {
   ButtonItem,
   PanelSection,
   PanelSectionRow,
-  Router,
   Tabs,
-  TabsState,
-  SidebarNavigation,
   gamepadDialogClasses,
   showModal,
   ConfirmModal,
@@ -24,6 +21,8 @@ interface AppProps {
 }
 
 export const App: React.FC<AppProps> = ({ serverAPI }) => {
+  const [activeTab, setActiveTab] = useState("store");
+  
   const {
     // Data
     searchResults,
@@ -141,13 +140,11 @@ export const App: React.FC<AppProps> = ({ serverAPI }) => {
       background: "var(--background)",
       color: "var(--foreground)"
     }}>
-      <Router>
-        <Tabs
-          tabs={tabs}
-          renderTabAddon={() => null}
-          activeTab="store"
-        />
-      </Router>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onShowTab={setActiveTab}
+      />
     </div>
   );
 };

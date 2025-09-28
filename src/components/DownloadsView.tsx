@@ -166,11 +166,6 @@ export const DownloadsView: React.FC<DownloadsViewProps> = ({
                 : '';
               onLaunch(progress.final_path!, platform);
             }}
-            style={{
-              minHeight: "32px",
-              fontSize: "12px",
-              background: "#4CAF50"
-            }}
           >
             Play Now
           </ButtonItem>

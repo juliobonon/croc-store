@@ -240,10 +240,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             layout="below"
             onClick={handleSave}
             disabled={!hasChanges || saving}
-            style={{
-              background: hasChanges ? "#4CAF50" : undefined,
-              opacity: !hasChanges ? 0.6 : 1
-            }}
           >
             {saving ? "Saving..." : hasChanges ? "Save Changes" : "No Changes"}
           </ButtonItem>
@@ -254,7 +250,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <ButtonItem
               layout="below"
               onClick={handleReset}
-              style={{ background: "#FF9800" }}
             >
               Reset Changes
             </ButtonItem>

@@ -67,7 +67,6 @@ export const ROMCard: React.FC<ROMCardProps> = ({
         border: "1px solid rgba(255, 255, 255, 0.1)",
         minHeight: "120px"
       }}
-      className={joinClassNames(gamepadDialogClasses.Panel, gamepadDialogClasses.PanelHover)}
     >
       <div style={{ display: "flex", gap: "8px", height: "100%" }}>
         {/* ROM Image */}
@@ -176,12 +175,6 @@ export const ROMCard: React.FC<ROMCardProps> = ({
           layout="below"
           onClick={handleAction}
           disabled={isDownloading}
-          style={{
-            minHeight: "28px",
-            fontSize: "12px",
-            background: getStatusColor(),
-            opacity: isDownloading ? 0.6 : 1
-          }}
         >
           {getActionText()}
         </ButtonItem>
