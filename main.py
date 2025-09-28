@@ -2,23 +2,21 @@ import asyncio
 import aiohttp
 import os
 import json
-import logging
 from typing import Dict, List, Any, Optional
 import zipfile
 import subprocess
 from pathlib import Path
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# The decky plugin module is located at decky-loader/plugin
+import decky
 
-class CrocStorePlugin:
+class Plugin:
     def __init__(self):
         self.session = None
         self.base_url = "https://api.crocdb.net"  # Placeholder - need actual CrocDB API endpoint
-        self.roms_path = Path("/home/deck/ROMs")
-        self.downloads_path = Path("/home/deck/Downloads/CrocStore")
-        self.settings_path = Path("/home/deck/.config/croc-store")
+        self.roms_path = Path(decky.DECKY_USER_HOME) / "ROMs"
+        self.downloads_path = Path(decky.DECKY_USER_HOME) / "Downloads" / "CrocStore"
+        self.settings_path = Path(decky.DECKY_SETTINGS_DIR)
         
         # Ensure directories exist
         self.roms_path.mkdir(parents=True, exist_ok=True)
@@ -44,6 +42,31 @@ class CrocStorePlugin:
         """Clean up resources"""
         if self.session:
             await self.session.close()
+
+    # Asyncio-compatible long-running code, executed in a task when the plugin is loaded
+    async def _main(self):
+        decky.logger.info("Croc Store plugin initializing...")
+
+    # Function called first during the unload process
+    async def _unload(self):
+        decky.logger.info("Croc Store plugin unloading...")
+        await self.close()
+
+    # Function called after `_unload` during uninstall
+    async def _uninstall(self):
+        decky.logger.info("Croc Store plugin uninstalling...")
+        pass
+
+    # Migrations that should be performed before entering `_main()`.
+    async def _migration(self):
+        decky.logger.info("Croc Store plugin migrating...")
+        # Migrate old settings and data if needed
+        decky.migrate_settings(
+            os.path.join("/home/deck/.config", "croc-store"),
+        )
+        decky.migrate_runtime(
+            os.path.join("/home/deck/Downloads", "CrocStore"),
+        )
     
     # Settings Management
     async def get_settings(self) -> Dict[str, Any]:
@@ -68,7 +91,7 @@ class CrocStorePlugin:
                 await self.save_settings(default_settings)
                 return default_settings
         except Exception as e:
-            logger.error(f"Error loading settings: {e}")
+            decky.logger.error(f"Error loading settings: {e}")
             return default_settings
     
     async def save_settings(self, settings: Dict[str, Any]) -> bool:
@@ -79,7 +102,7 @@ class CrocStorePlugin:
                 json.dump(settings, f, indent=2)
             return True
         except Exception as e:
-            logger.error(f"Error saving settings: {e}")
+            decky.logger.error(f"Error saving settings: {e}")
             return False
     
     # ROM Search and Browse
@@ -88,48 +111,143 @@ class CrocStorePlugin:
         try:
             session = await self._get_session()
             
-            # Build search parameters
-            params = {
-                "q": query,
-                "limit": limit
+            # Build request payload for CrocDB API
+            payload = {
+                "max_results": min(limit, 100),  # API max is 100
+                "page": 1
             }
+            
+            if query:
+                payload["search_key"] = query
+            
             if platform:
-                params["platform"] = platform
+                payload["platforms"] = [platform.lower()]
             
-            # For now, return mock data until we have the actual CrocDB API
-            # TODO: Replace with actual API call
-            mock_roms = [
-                {
-                    "id": f"rom_{i}",
-                    "name": f"Super Mario Bros {i}",
-                    "platform": "NES",
-                    "region": "USA",
-                    "language": "English",
-                    "size": "32KB",
-                    "description": f"Classic platformer game {i}",
-                    "download_url": f"https://example.com/roms/smb{i}.zip",
-                    "image_url": f"https://example.com/images/smb{i}.png"
-                }
-                for i in range(1, min(limit + 1, 6))
-                if query.lower() in f"super mario bros {i}".lower()
-            ]
+            decky.logger.info(f"Searching CrocDB with payload: {payload}")
             
-            return mock_roms
+            # Make API request to CrocDB
+            async with session.post(f"{self.base_url}/search", json=payload, timeout=10) as response:
+                if response.status != 200:
+                    decky.logger.error(f"CrocDB API returned status {response.status}")
+                    return []
+                
+                data = await response.json()
+                
+                # Check if API returned an error
+                if "error" in data.get("info", {}):
+                    decky.logger.error(f"CrocDB API error: {data['info']['error']}")
+                    return []
+                
+                # Transform CrocDB format to our ROM format
+                roms = []
+                results = data.get("data", {}).get("results", [])
+                
+                for entry in results:
+                    # Get the first download link if available
+                    download_url = ""
+                    size_str = "Unknown"
+                    
+                    if entry.get("links") and len(entry["links"]) > 0:
+                        first_link = entry["links"][0]
+                        download_url = first_link.get("url", "")
+                        size_str = first_link.get("size_str", "Unknown")
+                    
+                    # Map regions array to a single region string
+                    region = "Unknown"
+                    if entry.get("regions") and len(entry["regions"]) > 0:
+                        region_map = {
+                            "us": "USA",
+                            "eu": "Europe", 
+                            "jp": "Japan",
+                            "other": "Other"
+                        }
+                        region = region_map.get(entry["regions"][0], entry["regions"][0].upper())
+                    
+                    rom_data = {
+                        "id": entry.get("slug", ""),
+                        "name": entry.get("title", "Unknown"),
+                        "platform": entry.get("platform", "").upper(),
+                        "region": region,
+                        "language": "English",  # CrocDB doesn't specify language, defaulting to English
+                        "size": size_str,
+                        "description": f"{entry.get('title', 'Unknown')} for {entry.get('platform', '').upper()}",
+                        "download_url": download_url,
+                        "image_url": entry.get("boxart_url", "")
+                    }
+                    roms.append(rom_data)
+                
+                decky.logger.info(f"Found {len(roms)} ROMs for query '{query}' on platform '{platform}'")
+                return roms
             
+        except asyncio.TimeoutError:
+            decky.logger.error("CrocDB API request timed out")
+            return []
         except Exception as e:
-            logger.error(f"Error searching ROMs: {e}")
+            decky.logger.error(f"Error searching ROMs: {e}")
             return []
     
     async def get_platforms(self) -> List[Dict[str, Any]]:
-        """Get available platforms"""
-        # Mock data for now
+        """Get available platforms from CrocDB API"""
+        try:
+            session = await self._get_session()
+            
+            decky.logger.info("Fetching platforms from CrocDB API")
+            
+            # Make API request to CrocDB platforms endpoint
+            async with session.get(f"{self.base_url}/platforms", timeout=10) as response:
+                if response.status != 200:
+                    decky.logger.error(f"CrocDB platforms API returned status {response.status}")
+                    return self._get_fallback_platforms()
+                
+                data = await response.json()
+                
+                # Check if API returned an error
+                if "error" in data.get("info", {}):
+                    decky.logger.error(f"CrocDB platforms API error: {data['info']['error']}")
+                    return self._get_fallback_platforms()
+                
+                # Transform CrocDB platforms format to our format
+                platforms = []
+                platforms_data = data.get("data", {}).get("platforms", {})
+                
+                for platform_id, platform_info in platforms_data.items():
+                    # Create short name from the full name
+                    full_name = platform_info.get("name", platform_id.upper())
+                    short_name = platform_id.upper()
+                    
+                    platform_data = {
+                        "id": platform_id,
+                        "name": full_name,
+                        "short_name": short_name
+                    }
+                    platforms.append(platform_data)
+                
+                # Sort platforms by name for better UX
+                platforms.sort(key=lambda x: x["name"])
+                
+                decky.logger.info(f"Loaded {len(platforms)} platforms from CrocDB API")
+                return platforms
+            
+        except asyncio.TimeoutError:
+            decky.logger.error("CrocDB platforms API request timed out, using fallback")
+            return self._get_fallback_platforms()
+        except Exception as e:
+            decky.logger.error(f"Error fetching platforms: {e}, using fallback")
+            return self._get_fallback_platforms()
+    
+    def _get_fallback_platforms(self) -> List[Dict[str, Any]]:
+        """Fallback platforms list if API is unavailable"""
         return [
             {"id": "nes", "name": "Nintendo Entertainment System", "short_name": "NES"},
             {"id": "snes", "name": "Super Nintendo Entertainment System", "short_name": "SNES"},
             {"id": "gba", "name": "Game Boy Advance", "short_name": "GBA"},
             {"id": "n64", "name": "Nintendo 64", "short_name": "N64"},
             {"id": "psx", "name": "PlayStation", "short_name": "PSX"},
-            {"id": "genesis", "name": "Sega Genesis", "short_name": "Genesis"}
+            {"id": "ps1", "name": "PlayStation", "short_name": "PS1"},
+            {"id": "genesis", "name": "Sega Genesis", "short_name": "Genesis"},
+            {"id": "sms", "name": "Sega Master System", "short_name": "SMS"},
+            {"id": "gb", "name": "Game Boy", "short_name": "GB"},
+            {"id": "gbc", "name": "Game Boy Color", "short_name": "GBC"}
         ]
     
     # Download Management
@@ -189,7 +307,7 @@ class CrocStorePlugin:
             return True
             
         except Exception as e:
-            logger.error(f"Error downloading ROM {rom_id}: {e}")
+            decky.logger.error(f"Error downloading ROM {rom_id}: {e}")
             if rom_id in self.download_progress:
                 self.download_progress[rom_id]["status"] = "error"
                 self.download_progress[rom_id]["error"] = str(e)
@@ -225,7 +343,7 @@ class CrocStorePlugin:
             
             # Check if ROM file exists
             if not os.path.exists(rom_path):
-                logger.error(f"ROM file not found: {rom_path}")
+                decky.logger.error(f"ROM file not found: {rom_path}")
                 return False
             
             # Try to launch with preferred emulator
@@ -256,7 +374,7 @@ class CrocStorePlugin:
             return True
             
         except Exception as e:
-            logger.error(f"Error launching ROM {rom_path}: {e}")
+            decky.logger.error(f"Error launching ROM {rom_path}: {e}")
             return False
     
     # Local ROM Management
@@ -281,59 +399,6 @@ class CrocStorePlugin:
                             roms.append(rom_info)
             
         except Exception as e:
-            logger.error(f"Error getting local ROMs: {e}")
+            decky.logger.error(f"Error getting local ROMs: {e}")
         
         return roms
-
-# Plugin instance
-plugin_instance = CrocStorePlugin()
-
-# API Functions for frontend
-async def search_roms(query: str = "", platform: str = "", limit: int = 50):
-    """Search ROMs API endpoint"""
-    return await plugin_instance.search_roms(query, platform, limit)
-
-async def get_platforms():
-    """Get platforms API endpoint"""
-    return await plugin_instance.get_platforms()
-
-async def download_rom(rom_id: str, rom_info: dict):
-    """Download ROM API endpoint"""
-    return await plugin_instance.download_rom(rom_id, rom_info)
-
-async def get_download_progress(rom_id: str):
-    """Get download progress API endpoint"""
-    return await plugin_instance.get_download_progress(rom_id)
-
-async def get_all_downloads():
-    """Get all downloads API endpoint"""
-    return await plugin_instance.get_all_downloads()
-
-async def launch_rom(rom_path: str, platform: str = ""):
-    """Launch ROM API endpoint"""
-    return await plugin_instance.launch_rom(rom_path, platform)
-
-async def get_local_roms():
-    """Get local ROMs API endpoint"""
-    return await plugin_instance.get_local_roms()
-
-async def get_settings():
-    """Get settings API endpoint"""
-    return await plugin_instance.get_settings()
-
-async def save_settings(settings: dict):
-    """Save settings API endpoint"""
-    return await plugin_instance.save_settings(settings)
-
-async def detect_emulators():
-    """Detect emulators API endpoint"""
-    return await plugin_instance.detect_emulators()
-
-# Plugin lifecycle
-async def _main():
-    """Plugin main function"""
-    pass
-
-async def _unload():
-    """Plugin cleanup function"""
-    await plugin_instance.close()

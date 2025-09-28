@@ -6,7 +6,7 @@ import {
   ButtonItem,
   gamepadDialogClasses,
   joinClassNames,
-} from "decky-frontend-lib";
+} from "@decky/ui";
 import { ROM, DownloadProgress } from "../types";
 
 interface ROMCardProps {

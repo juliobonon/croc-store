@@ -6,7 +6,7 @@ import {
   ScrollPanelGroup,
   ButtonItem,
   Dropdown,
-} from "decky-frontend-lib";
+} from "@decky/ui";
 import { LocalROM } from "../types";
 import { ROMCard } from "./ROMCard";
 

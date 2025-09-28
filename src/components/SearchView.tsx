@@ -9,7 +9,7 @@ import {
   Focusable,
   ScrollPanelGroup,
   gamepadDialogClasses,
-} from "decky-frontend-lib";
+} from "@decky/ui";
 import { ROM, Platform, DownloadProgress } from "../types";
 import { ROMCard } from "./ROMCard";
 

@@ -1,14 +1,9 @@
 import React, { useState } from "react";
 import {
-  ButtonItem,
-  PanelSection,
-  PanelSectionRow,
   Tabs,
-  gamepadDialogClasses,
   showModal,
   ConfirmModal,
-} from "decky-frontend-lib";
-import { ServerAPI } from "decky-frontend-lib";
+} from "@decky/ui";
 import { useCrocStore } from "../hooks/useCrocStore";
 import { SearchView } from "./SearchView";
 import { DownloadsView } from "./DownloadsView";
@@ -16,11 +11,7 @@ import { LocalROMsView } from "./LocalROMs";
 import { SettingsView } from "./SettingsView";
 import { ROM } from "../types";
 
-interface AppProps {
-  serverAPI: ServerAPI;
-}
-
-export const App: React.FC<AppProps> = ({ serverAPI }) => {
+export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("store");
   
   const {
@@ -34,7 +25,6 @@ export const App: React.FC<AppProps> = ({ serverAPI }) => {
     
     // Loading states
     isSearching,
-    isLoadingPlatforms,
     isLoadingLocalROMs,
     isLoadingSettings,
     
@@ -45,7 +35,7 @@ export const App: React.FC<AppProps> = ({ serverAPI }) => {
     loadLocalROMs,
     saveSettings,
     detectEmulators,
-  } = useCrocStore(serverAPI);
+  } = useCrocStore();
 
   const handleDownload = async (rom: ROM) => {
     // Show confirmation modal
