@@ -402,3 +402,6 @@ class Plugin:
             decky.logger.error(f"Error getting local ROMs: {e}")
         
         return roms
+
+# Create plugin instance for Decky Loader
+plugin = Plugin()
