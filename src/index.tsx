@@ -1,17 +1,12 @@
 import {
   definePlugin,
-  routerHook,
 } from "@decky/api";
 import { staticClasses } from "@decky/ui";
 import { FaGamepad } from "react-icons/fa";
 import App from "./components/App";
-import { StoreRouter } from "./pages/StoreRouter";
 
 export default definePlugin(() => {
   console.log("Croc Store plugin initializing...")
-
-  // Register the fullsize store route
-  routerHook.addRoute("/croc-store", StoreRouter);
 
   return {
     // The name shown in various decky menus
@@ -25,8 +20,6 @@ export default definePlugin(() => {
     // The function triggered when your plugin unloads
     onDismount() {
       console.log("Croc Store plugin dismissed");
-      // Clean up the route when plugin is dismissed
-      routerHook.removeRoute("/croc-store");
     },
   };
 });

@@ -38,8 +38,7 @@ export function StoreRouter() {
   return (
     <div
       style={{
-        marginTop: "40px",
-        height: "calc(100% - 40px)",
+        height: "100%",
         background: "#0e141b",
       }}
     >

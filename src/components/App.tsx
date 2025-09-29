@@ -10,10 +10,12 @@ import { SearchView } from "./SearchView";
 import { DownloadsView } from "./DownloadsView";
 import { LocalROMsView } from "./LocalROMs";
 import { SettingsView } from "./SettingsView";
+import { StoreRouter } from "../pages/StoreRouter";
 import { ROM } from "../types";
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("store");
+  const [showFullStore, setShowFullStore] = useState(false);
   
   const {
     // Data
@@ -73,8 +75,11 @@ export const App: React.FC = () => {
   };
 
   const handleOpenFullStore = () => {
-    // Navigate to the fullsize store page
-    window.location.hash = "/croc-store";
+    setShowFullStore(true);
+  };
+
+  const handleCloseFullStore = () => {
+    setShowFullStore(false);
   };
 
   const tabs = [
@@ -139,17 +144,61 @@ export const App: React.FC = () => {
   ];
 
   return (
-    <div style={{ 
-      height: "100%", 
-      background: "var(--background)",
-      color: "var(--foreground)"
-    }}>
-      <Tabs
-        tabs={tabs}
-        activeTab={activeTab}
-        onShowTab={setActiveTab}
-      />
-    </div>
+    <>
+      <div style={{ 
+        height: "100%", 
+        background: "var(--background)",
+        color: "var(--foreground)"
+      }}>
+        <Tabs
+          tabs={tabs}
+          activeTab={activeTab}
+          onShowTab={setActiveTab}
+        />
+      </div>
+      
+      {/* Full Store Overlay */}
+      {showFullStore && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          background: "#0e141b",
+          zIndex: 1000,
+          display: "flex",
+          flexDirection: "column"
+        }}>
+          {/* Header with close button */}
+          <div style={{
+            height: "60px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 20px",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)"
+          }}>
+            <h2 style={{ 
+              margin: 0, 
+              color: "#fff", 
+              fontSize: "18px" 
+            }}>
+              Croc Store - Full Size
+            </h2>
+            
+            <ButtonItem onClick={handleCloseFullStore}>
+              ✕ Close
+            </ButtonItem>
+          </div>
+          
+          {/* Store content */}
+          <div style={{ flex: 1, overflow: "hidden" }}>
+            <StoreRouter />
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
