@@ -1,5 +1,5 @@
 import {
-  definePlugin
+  definePlugin,
 } from "@decky/api";
 import { staticClasses } from "@decky/ui";
 import { FaGamepad } from "react-icons/fa";
