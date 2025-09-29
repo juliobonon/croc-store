@@ -193,7 +193,7 @@ export const App: React.FC = () => {
           </div>
           
           {/* Store content */}
-          <div style={{ flex: 1, overflow: "hidden" }}>
+          <div style={{ flex: 1, overflow: "auto" }}>
             <StoreRouter />
           </div>
         </div>

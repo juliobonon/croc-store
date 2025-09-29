@@ -40,6 +40,8 @@ export function StoreRouter() {
       style={{
         height: "100%",
         background: "#0e141b",
+        display: "flex",
+        flexDirection: "column"
       }}
     >
       <Tabs
