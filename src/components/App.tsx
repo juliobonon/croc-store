@@ -3,6 +3,7 @@ import {
   Tabs,
   showModal,
   ConfirmModal,
+  ButtonItem,
 } from "@decky/ui";
 import { useCrocStore } from "../hooks/useCrocStore";
 import { SearchView } from "./SearchView";
@@ -71,19 +72,32 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleOpenFullStore = () => {
+    // Navigate to the fullsize store page
+    window.location.hash = "/croc-store";
+  };
+
   const tabs = [
     {
       title: "Store",
       content: (
-        <SearchView
-          searchResults={searchResults}
-          platforms={platforms}
-          downloads={downloads}
-          isSearching={isSearching}
-          onSearch={searchROMs}
-          onDownload={handleDownload}
-          onLaunch={handleLaunch}
-        />
+        <div>
+          <ButtonItem
+            layout="below"
+            onClick={handleOpenFullStore}
+          >
+            Open Full Store
+          </ButtonItem>
+          <SearchView
+            searchResults={searchResults}
+            platforms={platforms}
+            downloads={downloads}
+            isSearching={isSearching}
+            onSearch={searchROMs}
+            onDownload={handleDownload}
+            onLaunch={handleLaunch}
+          />
+        </div>
       ),
       id: "store"
     },
