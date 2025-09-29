@@ -4,6 +4,7 @@ import {
   Dropdown,
   ButtonItem,
   Spinner,
+  Navigation,
 } from "@decky/ui";
 import { ROM, Platform, DownloadProgress } from "../types";
 import { ROMCard } from "../components/ROMCard";
@@ -16,6 +17,7 @@ interface FullSizeStorePageProps {
   onSearch: (query: string, platform: string, limit: number) => void;
   onDownload: (rom: ROM) => void;
   onLaunch: (romPath: string, platform: string) => void;
+  onClose?: () => void;
 }
 
 export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
@@ -25,7 +27,8 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
   isSearching,
   onSearch,
   onDownload,
-  onLaunch
+  onLaunch,
+  onClose
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
@@ -64,15 +67,44 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
 
   return (
     <div style={{ 
-      height: "100%", 
-      background: "var(--background)",
-      color: "var(--foreground)",
+      position: "fixed",
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100vh",
+      background: "#0e141b",
+      color: "#fff",
       display: "flex",
-      flexDirection: "column"
+      flexDirection: "column",
+      zIndex: 1000
     }}>
-      {/* Fixed search section at top */}
+      {/* Header with navigation */}
       <div style={{
-        background: "var(--background)",
+        height: "60px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 20px",
+        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+        backgroundColor: "#0e141b"
+      }}>
+        <h2 style={{ 
+          margin: 0, 
+          color: "#fff", 
+          fontSize: "18px",
+          fontWeight: "bold"
+        }}>
+          🐊 Croc Store - Full Size
+        </h2>
+        
+        <ButtonItem onClick={onClose || (() => Navigation.NavigateBack())}>
+          ← Back
+        </ButtonItem>
+      </div>
+
+      {/* Fixed search section */}
+      <div style={{
+        backgroundColor: "#0e141b",
         padding: "20px",
         borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
         boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"
@@ -81,7 +113,7 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
           margin: "0 0 16px 0", 
           fontSize: "18px", 
           fontWeight: "bold",
-          color: "var(--foreground)"
+          color: "#fff"
         }}>
           🔍 Search ROMs
         </h3>
@@ -138,7 +170,7 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
           <h3 style={{ 
             margin: 0, 
             fontSize: "16px",
-            color: "var(--foreground)"
+            color: "#fff"
           }}>
             📚 ROM Store - {searchResults.length} Results
           </h3>
