@@ -10,7 +10,7 @@ import { SearchView } from "./SearchView";
 import { DownloadsView } from "./DownloadsView";
 import { LocalROMsView } from "./LocalROMs";
 import { SettingsView } from "./SettingsView";
-import { StoreRouter } from "../pages/StoreRouter";
+import { FullSizeStorePage } from "../pages/FullSizeStorePage";
 import { ROM } from "../types";
 
 export const App: React.FC = () => {
@@ -159,44 +159,16 @@ export const App: React.FC = () => {
       
       {/* Full Store Overlay */}
       {showFullStore && (
-        <div style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100vw",
-          height: "100vh",
-          background: "#0e141b",
-          zIndex: 1000,
-          display: "flex",
-          flexDirection: "column"
-        }}>
-          {/* Header with close button */}
-          <div style={{
-            height: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 20px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.1)"
-          }}>
-            <h2 style={{ 
-              margin: 0, 
-              color: "#fff", 
-              fontSize: "18px" 
-            }}>
-              Croc Store - Full Size
-            </h2>
-            
-            <ButtonItem onClick={handleCloseFullStore}>
-              ✕ Close
-            </ButtonItem>
-          </div>
-          
-          {/* Store content */}
-          <div style={{ flex: 1, overflow: "auto" }}>
-            <StoreRouter />
-          </div>
-        </div>
+        <FullSizeStorePage
+          searchResults={searchResults}
+          platforms={platforms}
+          downloads={downloads}
+          isSearching={isSearching}
+          onSearch={searchROMs}
+          onDownload={handleDownload}
+          onLaunch={handleLaunch}
+          onClose={handleCloseFullStore}
+        />
       )}
     </>
   );
