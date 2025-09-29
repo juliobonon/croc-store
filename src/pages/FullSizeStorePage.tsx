@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   TextField,
   Dropdown,
   ButtonItem,
   Spinner,
+  Focusable,
   Navigation,
 } from "@decky/ui";
 import { ROM, Platform, DownloadProgress } from "../types";
@@ -12,7 +13,7 @@ import { ROMCard } from "../components/ROMCard";
 interface FullSizeStorePageProps {
   searchResults: ROM[];
   platforms: Platform[];
-  downloads: {[key: string]: DownloadProgress};
+  downloads: { [key: string]: DownloadProgress };
   isSearching: boolean;
   onSearch: (query: string, platform: string, limit: number) => void;
   onDownload: (rom: ROM) => void;
@@ -33,6 +34,7 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState("");
   const [searchLimit, setSearchLimit] = useState(50);
+  const firstCardRef = useRef<HTMLDivElement>(null);
 
   // Auto-search when query changes (with debounce)
   useEffect(() => {
@@ -66,62 +68,52 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
   ];
 
   return (
-    <div style={{ 
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "#0e141b",
-      color: "#fff",
+    <Focusable style={{
+      padding: "20px",
+      height: "100%",
       display: "flex",
-      flexDirection: "column",
-      zIndex: 1000
+      flexDirection: "column"
     }}>
-      {/* Header with navigation */}
-      <div style={{
-        height: "60px",
+      {/* Header section */}
+      <Focusable style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "0 20px",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-        backgroundColor: "#0e141b"
+        marginBottom: "20px"
       }}>
-        <h2 style={{ 
-          margin: 0, 
-          color: "#fff", 
-          fontSize: "18px",
+        <h2 style={{
+          margin: 0,
+          fontSize: "24px",
           fontWeight: "bold"
         }}>
           🐊 Croc Store - Full Size
         </h2>
-        
+
         <ButtonItem onClick={onClose || (() => Navigation.NavigateBack())}>
           ← Back
         </ButtonItem>
-      </div>
+      </Focusable>
 
-      {/* Fixed search section */}
-      <div style={{
-        backgroundColor: "#0e141b",
+      {/* Search section */}
+      <Focusable style={{
+        marginBottom: "20px",
         padding: "20px",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)"
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        borderRadius: "8px",
+        backgroundColor: "rgba(255, 255, 255, 0.05)"
       }}>
-        <h3 style={{ 
-          margin: "0 0 16px 0", 
-          fontSize: "18px", 
-          fontWeight: "bold",
-          color: "#fff"
+        <h3 style={{
+          margin: "0 0 16px 0",
+          fontSize: "18px",
+          fontWeight: "bold"
         }}>
           🔍 Search ROMs
         </h3>
-        
-        <div style={{ 
-          display: "grid", 
-          gridTemplateColumns: "2fr 1fr 1fr", 
-          gap: "16px", 
+
+        <Focusable style={{
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr 1fr",
+          gap: "16px",
           marginBottom: "16px",
           alignItems: "end"
         }}>
@@ -130,7 +122,7 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          
+
           <Dropdown
             rgOptions={platformOptions}
             selectedOption={selectedPlatform}
@@ -144,8 +136,8 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
             onChange={(data) => setSearchLimit(data.data)}
             strDefaultLabel="50 Results"
           />
-        </div>
-        
+        </Focusable>
+
         <ButtonItem
           layout="below"
           onClick={() => onSearch(searchQuery, selectedPlatform, searchLimit)}
@@ -153,78 +145,85 @@ export const FullSizeStorePage: React.FC<FullSizeStorePageProps> = ({
         >
           {isSearching ? "🔍 Searching..." : "🔍 Search ROMs"}
         </ButtonItem>
-      </div>
+      </Focusable>
 
-      {/* Scrollable results section */}
-      <div style={{ 
-        flex: 1, 
-        overflow: "auto",
-        padding: "20px"
+      {/* Results section */}
+      <Focusable style={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column"
       }}>
-        <div style={{
+        <Focusable style={{
           marginBottom: "16px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between"
         }}>
-          <h3 style={{ 
-            margin: 0, 
-            fontSize: "16px",
-            color: "#fff"
+          <h3 style={{
+            margin: 0,
+            fontSize: "18px"
           }}>
             📚 ROM Store - {searchResults.length} Results
           </h3>
           {isSearching && (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Focusable style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Spinner />
-              <span style={{ fontSize: "14px", color: "#aaa" }}>Loading...</span>
-            </div>
+              <span style={{ fontSize: "14px" }}>Loading...</span>
+            </Focusable>
           )}
-        </div>
+        </Focusable>
 
         {isSearching && searchResults.length === 0 ? (
-          <div style={{ 
-            display: "flex", 
-            justifyContent: "center", 
-            alignItems: "center", 
+          <Focusable style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
             padding: "60px",
-            fontSize: "18px",
-            color: "#aaa"
+            fontSize: "18px"
           }}>
             <Spinner />
             <span style={{ marginLeft: "12px" }}>Searching for ROMs...</span>
-          </div>
+          </Focusable>
         ) : searchResults.length === 0 ? (
-          <div style={{ 
-            textAlign: "center", 
-            color: "#aaa", 
+          <Focusable style={{
+            textAlign: "center",
             padding: "60px",
             fontSize: "16px"
           }}>
-            {searchQuery || selectedPlatform 
+            {searchQuery || selectedPlatform
               ? "🚫 No ROMs found matching your search criteria. Try different keywords or select a different platform."
               : "🎮 Enter a search term above to discover ROMs from our extensive library!"
             }
-          </div>
+          </Focusable>
         ) : (
-          <div style={{ 
-            display: "grid", 
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", 
-            gap: "20px",
-            paddingBottom: "20px"
+          <Focusable style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            rowGap: "15px",
+            columnGap: "15px"
           }}>
-            {searchResults.map((rom) => (
-              <ROMCard
+            {searchResults.map((rom, index) => (
+              <div
                 key={rom.id}
-                rom={rom}
-                onDownload={onDownload}
-                onLaunch={onLaunch}
-                downloadProgress={downloads[rom.id]}
-              />
+                ref={index === 0 ? firstCardRef : undefined}
+                style={{
+                  minWidth: "300px",
+                  maxWidth: "350px",
+                  flex: "1 1 auto"
+                }}
+              >
+                <ROMCard
+                  rom={rom}
+                  onDownload={onDownload}
+                  onLaunch={onLaunch}
+                  downloadProgress={downloads[rom.id]}
+                />
+              </div>
             ))}
-          </div>
+          </Focusable>
         )}
-      </div>
-    </div>
+      </Focusable>
+    </Focusable>
   );
 };

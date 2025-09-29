@@ -4,19 +4,18 @@ import {
   showModal,
   ConfirmModal,
   ButtonItem,
+  Navigation,
 } from "@decky/ui";
 import { useCrocStore } from "../hooks/useCrocStore";
 import { SearchView } from "./SearchView";
 import { DownloadsView } from "./DownloadsView";
 import { LocalROMsView } from "./LocalROMs";
 import { SettingsView } from "./SettingsView";
-import { FullSizeStorePage } from "../pages/FullSizeStorePage";
 import { ROM } from "../types";
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState("store");
-  const [showFullStore, setShowFullStore] = useState(false);
-  
+
   const {
     // Data
     searchResults,
@@ -25,12 +24,12 @@ export const App: React.FC = () => {
     localROMs,
     settings,
     emulators,
-    
+
     // Loading states
     isSearching,
     isLoadingLocalROMs,
     isLoadingSettings,
-    
+
     // Actions
     searchROMs,
     downloadROM,
@@ -55,7 +54,7 @@ export const App: React.FC = () => {
             console.log(`Started downloading ${rom.name}`);
           }
         }}
-        onCancel={() => {}}
+        onCancel={() => { }}
       />
     );
   };
@@ -68,18 +67,14 @@ export const App: React.FC = () => {
           strTitle="Launch Failed"
           strDescription="Failed to launch the ROM. Make sure you have the appropriate emulator installed."
           strOKButtonText="OK"
-          onOK={() => {}}
+          onOK={() => { }}
         />
       );
     }
   };
 
   const handleOpenFullStore = () => {
-    setShowFullStore(true);
-  };
-
-  const handleCloseFullStore = () => {
-    setShowFullStore(false);
+    Navigation.Navigate("/croc-store/full-store");
   };
 
   const tabs = [
@@ -144,33 +139,17 @@ export const App: React.FC = () => {
   ];
 
   return (
-    <>
-      <div style={{ 
-        height: "100%", 
-        background: "var(--background)",
-        color: "var(--foreground)"
-      }}>
-        <Tabs
-          tabs={tabs}
-          activeTab={activeTab}
-          onShowTab={setActiveTab}
-        />
-      </div>
-      
-      {/* Full Store Overlay */}
-      {showFullStore && (
-        <FullSizeStorePage
-          searchResults={searchResults}
-          platforms={platforms}
-          downloads={downloads}
-          isSearching={isSearching}
-          onSearch={searchROMs}
-          onDownload={handleDownload}
-          onLaunch={handleLaunch}
-          onClose={handleCloseFullStore}
-        />
-      )}
-    </>
+    <div style={{
+      height: "100%",
+      background: "var(--background)",
+      color: "var(--foreground)"
+    }}>
+      <Tabs
+        tabs={tabs}
+        activeTab={activeTab}
+        onShowTab={setActiveTab}
+      />
+    </div>
   );
 };
 
